@@ -1,4 +1,4 @@
-angular.module('miqi.controllers', ['ngCordova', 'ngWebSocket'])
+angular.module('miqi.controllers', [])
 
 .controller('AppCtrl', function($scope, $ionicModal, $timeout) {
 
@@ -41,21 +41,86 @@ angular.module('miqi.controllers', ['ngCordova', 'ngWebSocket'])
   };
 })
 
-.controller('PlaylistsCtrl', function($scope) {
-  $scope.playlists = [
-    { title: 'Reggae', id: 1 },
-    { title: 'Chill', id: 2 },
-    { title: 'Dubstep', id: 3 },
-    { title: 'Indie', id: 4 },
-    { title: 'Rap', id: 5 },
-    { title: 'Cowbell', id: 6 }
-  ];
+.controller('CredentialsCtrl', function($scope, $cordovaSQLite , Phrases) {
+
+	//Checking for webView for SQLite compataility, only available on native
+	$scope.webView = ionic.Platform.isWebView();
+
+	$scope.shouldShowDelete = false;
+	// Get phrases from services.js Phrases Factory
+	$scope.phrases = Phrases.all();
+
+	$scope.ctrlData = {
+      selectedPhrase : {"name" : "palaver"}, // <-- this is the default item
+      newPhrase : {"name" : ""}
+    };
+
+    //Add data to SQLite 
+    $scope.addData = function(){
+    	var phraseToAdd = '';
+    	if ($scope.ctrlData.newPhrase.name !== ""){
+			phraseToAdd = $scope.ctrlData.newPhrase.name;
+    	} else {
+    		phraseToAdd = $scope.ctrlData.selectedPhrase.name;
+    	}
+    	var query = "INSERT INTO sqltable (name) VALUES (?)";
+	    $cordovaSQLite.execute(sqlDB, query, [phraseToAdd]).then(function(res) {
+	      $scope.storedData.push({"id":res.insertId, "name":phraseToAdd});
+	    }, function (err) {
+	      console.error(err);
+	    });
+    	$scope.ctrlData.newPhrase.name = '';
+    };
+
+    //Remove data from SQLite 
+    $scope.removeData = function(index, exampleId){
+    	$scope.storedData.splice(index, 1);
+    	var query = "DELETE FROM sqltable WHERE id = ?";
+	    $cordovaSQLite.execute(sqlDB, query, [exampleId]);
+    };
+
+    $scope.transData = function(index, exampleId){
+    	var query = "SELECT id, name FROM sqltable WHERE id = ?";
+	    $cordovaSQLite.execute(sqlDB, query, [exampleId]).then(function(res) {
+			var row = res.rows.item(0);
+			alert(row["name"] + " " + row["id"]);
+	    }, function (err) {
+	      console.error(err);
+	    });
+    };
+	
+    $scope.showDelete = function() {
+    	$scope.shouldShowDelete = !$scope.shouldShowDelete;
+    };
+
+	$scope.$on('$ionicView.beforeEnter', function() {
+		$scope.storedData = [];
+		if ($scope.webView){
+			var query = "SELECT id, name FROM sqltable";
+			//Honestly prefer to have this CREATE in app.js but it was not working befor presentation
+      		$cordovaSQLite.execute(sqlDB, "CREATE TABLE IF NOT EXISTS sqltable (id INTEGER NOT NULL PRIMARY KEY, name text)");
+	        $cordovaSQLite.execute(sqlDB, query).then(function(res) {
+	        	for (var i = 0; i < res.rows.length; i++) {
+                  var row = res.rows.item(i);
+                  $scope.storedData.push(row);
+                  if (i == res.rows.length - 1){
+                    console.log("WebSQL Data: " + JSON.stringify($scope.storedData));
+                  }
+                }
+	        }, function (err) {
+	            console.error(err);
+	        });
+		} else {
+			$scope.storedData = [];
+		}
+	}); 
+
 })
 
 .controller('ScanCtrl', function($scope, $cordovaBarcodeScanner, $websocket) {
 	$scope.barcodeInfo = {};
 	
-	$scope.$on("$ionicView.enter", function(evt) {
+	$scope.$on("$ionicView.beforeEnter", function(evt) {
 	  document.addEventListener("deviceready", function () {
 
 		$cordovaBarcodeScanner
