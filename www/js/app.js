@@ -5,9 +5,10 @@
 // the 2nd parameter is an array of 'requires'
 // 'starter.controllers' is found in controllers.js
 var sqlDB = null;
+
 angular.module('miqi', ['ionic', 'miqi.controllers', 'miqi.services', 'ngCordova', 'ngWebSocket'])
 
-.run(function($ionicPlatform, $cordovaSQLite, $ionicPopup, $ionicHistory, $cordovaToast) {
+.run(function($ionicPlatform, $ionicPopup, $ionicHistory, $cordovaSQLite, $cordovaToast) {
   $ionicPlatform.ready(function() {
     // Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
     // for form inputs)
@@ -20,12 +21,12 @@ angular.module('miqi', ['ionic', 'miqi.controllers', 'miqi.services', 'ngCordova
       // org.apache.cordova.statusbar required
       StatusBar.styleDefault();
     }
-	
-    // Open the SQLite DB, but only possible on device
-    if (ionic.Platform.isWebView()){
-      sqlDB = $cordovaSQLite.openDB("liteDB.db");
-    }
 
+      // Open the SQLite DB, but only possible on device
+    if (ionic.Platform.isWebView()) {
+		sqlDB = $cordovaSQLite.openDB("liteDB.db");
+    }
+	
 	$ionicPlatform.registerBackButtonAction(function (e) {
 		function showConfirm() {
 			var confirmPopup = $ionicPopup.confirm({
@@ -57,45 +58,38 @@ angular.module('miqi', ['ionic', 'miqi.controllers', 'miqi.services', 'ngCordova
   });
 })
 
-.config(function($stateProvider, $urlRouterProvider) {
+.config(function($ionicConfigProvider, $stateProvider, $urlRouterProvider) {
+  $ionicConfigProvider.tabs.position('bottom');
+
   $stateProvider
 
-  .state('app', {
-    url: '/app',
+  // setup an abstract state for the tabs directive
+  .state('tab', {
+    url: '/tab',
     abstract: true,
-    templateUrl: 'templates/menu.html',
-    controller: 'AppCtrl'
+    templateUrl: 'templates/tabs.html'
   })
-
-  .state('app.scan', {
+  
+  .state('tab.scan', {
     url: '/scan',
     views: {
-      'menuContent': {
+      'tab-scan': {
         templateUrl: 'templates/scan.html',
 		controller: 'ScanCtrl'
       }
     }
   })
 	
-	.state('app.credentials', {
+	.state('tab.credentials', {
 	  url: '/credentials',
 	  views: {
-		'menuContent': {
+		'tab-credentials': {
 		  templateUrl: 'templates/credentials.html',
 		  controller: 'CredentialsCtrl'
 		}
 	  }
 	})
-
-  .state('app.single', {
-    url: '/credentials/:playlistId',
-    views: {
-      'menuContent': {
-        templateUrl: 'templates/playlist.html',
-        controller: 'PlaylistCtrl'
-      }
-    }
-  });
+  
   // if none of the above states are matched, use this as the fallback
-  $urlRouterProvider.otherwise('/app/scan');
+  $urlRouterProvider.otherwise('/tab/credentials');
 });

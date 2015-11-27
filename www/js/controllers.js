@@ -94,25 +94,28 @@ angular.module('miqi.controllers', [])
     };
 
 	$scope.$on('$ionicView.beforeEnter', function() {
-		$scope.storedData = [];
-		if ($scope.webView){
-			var query = "SELECT id, name FROM sqltable";
-			//Honestly prefer to have this CREATE in app.js but it was not working befor presentation
-      		$cordovaSQLite.execute(sqlDB, "CREATE TABLE IF NOT EXISTS sqltable (id INTEGER NOT NULL PRIMARY KEY, name text)");
-	        $cordovaSQLite.execute(sqlDB, query).then(function(res) {
-	        	for (var i = 0; i < res.rows.length; i++) {
-                  var row = res.rows.item(i);
-                  $scope.storedData.push(row);
-                  if (i == res.rows.length - 1){
-                    console.log("WebSQL Data: " + JSON.stringify($scope.storedData));
-                  }
-                }
-	        }, function (err) {
-	            console.error(err);
-	        });
-		} else {
+		// wait for sqlDB ready
+		setTimeout(function() {
 			$scope.storedData = [];
-		}
+			if ($scope.webView){
+				var query = "SELECT id, name FROM sqltable";
+				//Honestly prefer to have this CREATE in app.js but it was not working befor presentation
+				$cordovaSQLite.execute(sqlDB, "CREATE TABLE IF NOT EXISTS sqltable (id INTEGER NOT NULL PRIMARY KEY, name text)");
+				$cordovaSQLite.execute(sqlDB, query).then(function(res) {
+					for (var i = 0; i < res.rows.length; i++) {
+					  var row = res.rows.item(i);
+					  $scope.storedData.push(row);
+					  if (i == res.rows.length - 1){
+						console.log("WebSQL Data: " + JSON.stringify($scope.storedData));
+					  }
+					}
+				}, function (err) {
+					console.error(err);
+				});
+			} else {
+				$scope.storedData = [];
+			}
+		}, 500);
 	}); 
 
 })
