@@ -41,48 +41,23 @@ angular.module('miqi.controllers', [])
   };
 })
 
-.controller('CredentialsCtrl', function($scope, Phrases, PhraseDAO) {
+.controller('CredentialsCtrl', function($scope, CredentialDAO, Transmition) {
 
 	//Checking for webView for SQLite compataility, only available on native
 	$scope.webView = ionic.Platform.isWebView();
-
 	$scope.shouldShowDelete = false;
-	// Get phrases from services.js Phrases Factory
-	$scope.phrases = Phrases.all();
-
-	$scope.ctrlData = {
-      selectedPhrase : {"name" : "palaver"}, // <-- this is the default item
-      newPhrase : {"name" : ""}
-    };
-
-    //Add data to SQLite 
-    $scope.addData = function(){
-    	var phraseToAdd = '';
-    	if ($scope.ctrlData.newPhrase.name !== ""){
-			phraseToAdd = $scope.ctrlData.newPhrase.name;
-    	} else {
-    		phraseToAdd = $scope.ctrlData.selectedPhrase.name;
-    	}
-		
-		PhraseDAO.addPhrase(phraseToAdd).then(function(res) {
-			$scope.storedData.push({"id": res.insertId, "name": phraseToAdd});
-		}, function (err) {
-			console.error(err);
-		});
-		
-    	$scope.ctrlData.newPhrase.name = '';
-    };
 
     //Remove data from SQLite 
     $scope.removeData = function(index, exampleId){
     	$scope.storedData.splice(index, 1);
-		PhraseDAO.removePhrase(exampleId);
+		CredentialDAO.remove(exampleId);
     };
 
     $scope.transData = function(index, exampleId){
-	    PhraseDAO.transPhrase(exampleId).then(function(res) {
+	    CredentialDAO.trans(exampleId).then(function(res) {
 			var row = res.rows.item(0);
-			alert(row["name"] + " " + row["id"]);
+			// alert(row["name"] + " " + row["id"]);
+			Transmition.trans(row['user_name'], row['password']);
 	    }, function (err) {
 			console.error(err);
 	    });
@@ -97,7 +72,7 @@ angular.module('miqi.controllers', [])
 		setTimeout(function() {
 			$scope.storedData = [];
 			if ($scope.webView){
-				PhraseDAO.retrievePhrases().then(function(res) {
+				CredentialDAO.all().then(function(res) {
 					for (var i = 0; i < res.rows.length; i++) {
 					  var row = res.rows.item(i);
 					  $scope.storedData.push(row);
@@ -116,49 +91,15 @@ angular.module('miqi.controllers', [])
 
 })
 
-.controller('ScanCtrl', function($scope, $cordovaBarcodeScanner, $websocket) {
-	$scope.barcodeInfo = {};
+.controller('NewCtrl', function($scope, $state, CredentialDAO) {
+	$scope.credential = { name: 'Sina', userName: 'kelvin', password: '12345678' };
 	
-	$scope.$on("$ionicView.beforeEnter", function(evt) {
-	  document.addEventListener("deviceready", function () {
-
-		$cordovaBarcodeScanner
-		  .scan()
-		  .then(function(result) {
-			if (!result.cancelled) {
-				$scope.barcodeInfo = $scope.parseBarcodeInfo(result.text);
-			}
-		  }, function(error) {
-			alert("error!");
-		  });
-
-	  }, false);
-	});
-	
-	$scope.doSend = function() {
-		var ws = $websocket("ws://" + $scope.barcodeInfo["Hosts"] + ":" + $scope.barcodeInfo["Port"]);
-
-		ws.onOpen(function() {
-			ws.send("SET-CREDENTIAL MIQI/1.0\r\nClientId:" + $scope.barcodeInfo["ClientId"]+"\r\n");
-			ws.close();
+	$scope.doSave = function() {
+		CredentialDAO.add($scope.credential).then(function(res) {
+			$state.go('tab.credentials');
+		}, function (err) {
+			console.error(err);
 		});
 	};
 	
-	$scope.parseBarcodeInfo = function(result) {
-		var headers = {};
-		var pairs = result.split("\r\n");	
-		var pair;
-
-		for (pair in pairs) {
-			var temp = pairs[pair].split(":");
-			if (temp)
-				headers[temp[0]] = temp[1];
-		}
-
-		return headers;
-	};
-	
-})
-
-.controller('PlaylistCtrl', function($scope, $stateParams) {
 });

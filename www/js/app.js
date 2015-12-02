@@ -25,7 +25,7 @@ angular.module('miqi', ['ionic', 'miqi.controllers', 'miqi.services', 'ngCordova
       // Open the SQLite DB, but only possible on device
     if (ionic.Platform.isWebView()) {
 		sqlDB = $cordovaSQLite.openDB("liteDB.db");
-		$cordovaSQLite.execute(sqlDB, "CREATE TABLE IF NOT EXISTS sqltable (id INTEGER NOT NULL PRIMARY KEY, name text)");
+		$cordovaSQLite.execute(sqlDB, "CREATE TABLE IF NOT EXISTS credentials (id INTEGER NOT NULL PRIMARY KEY, name text, user_name text, password text)");
     }
 	
 	$ionicPlatform.registerBackButtonAction(function (e) {
@@ -71,16 +71,16 @@ angular.module('miqi', ['ionic', 'miqi.controllers', 'miqi.services', 'ngCordova
     templateUrl: 'templates/tabs.html'
   })
   
-  .state('tab.scan', {
-    url: '/scan',
+  .state('tab.new', {
+    url: '/new',
     views: {
-      'tab-scan': {
-        templateUrl: 'templates/scan.html',
-		controller: 'ScanCtrl'
+      'tab-new': {
+        templateUrl: 'templates/new.html',
+		controller: 'NewCtrl'
       }
     }
   })
-	
+  
 	.state('tab.credentials', {
 	  url: '/credentials',
 	  views: {

@@ -1,73 +1,74 @@
 angular.module('miqi.services', [])
 
-.factory('Phrases', function() {
-  // Might use a resource here that returns a JSON array
-
-  var awesomeData = [{
-    id: 0,
-    name: 'palaver',
-    definition: 'prolonged and idle discussion, utter waste of time'
-  }, {
-    id: 1,
-    name: 'Gordon Bennett',
-    definition: 'Woah, .. To be surprised'
-  }, {
-    id: 2,
-    name: 'chinwag',
-    definition: 'chat, gossip, catch up among a group'
-  }, {
-    id: 3,
-    name: 'cop the needle',
-    definition: 'to become annoyed or angry'
-  }, {
-    id: 4,
-    name: 'knees up',
-    definition: 'an awesome party time'
-  }, {
-    id: 5,
-    name: 'codswallop',
-    definition: 'Rubbish, nonsense'
-  }];
-
-  return {
-    all: function() {
-      return awesomeData;
-    },
-    remove: function(phrase) {
-      awesomeData.splice(awesomeData.indexOf(phrase), 1);
-    },
-    get: function(phraseId) {
-      for (var i = 0; i < awesomeData.length; i++) {
-        if (awesomeData[i].id === parseInt(phraseId)) {
-          return awesomeData[i];
-        }
-      }
-      return null;
-    }
-  };
-})
-
-.factory('PhraseDAO', function($cordovaSQLite) {
+.factory('CredentialDAO', function($cordovaSQLite) {
 	return {
-		addPhrase: function(phrase) {
-			var query = "INSERT INTO sqltable (name) VALUES (?)";
-			return $cordovaSQLite.execute(sqlDB, query, [phrase]);
+		add: function(credential) {
+			var query = "INSERT INTO credentials (name,user_name,password) VALUES (?,?,?)";
+			return $cordovaSQLite.execute(sqlDB, query, [credential.name, credential.userName, credential.password]);
 		},
 
-		removePhrase: function(id) {
-		    var query = "DELETE FROM sqltable WHERE id = ?";
+		remove: function(id) {
+		    var query = "DELETE FROM credentials WHERE id = ?";
 			$cordovaSQLite.execute(sqlDB, query, [id]);
 		},
 
-		transPhrase: function(id) {
-		    var query = "SELECT id, name FROM sqltable WHERE id = ?";
-			$cordovaSQLite.execute(sqlDB, query, [id]);
+		trans: function(id) {
+		    var query = "SELECT id,name,user_name,password FROM credentials WHERE id=?";
+			return $cordovaSQLite.execute(sqlDB, query, [id]);
 		},
 
-		retrievePhrases: function() {
-			var query = "SELECT id, name FROM sqltable";
+		all: function() {
+			var query = "SELECT id,name,user_name,password FROM credentials";
 			return $cordovaSQLite.execute(sqlDB, query);
 		},
 		
+	};
+})
+
+.factory('Transmition', function($cordovaBarcodeScanner, $websocket) {
+	var parseBarcodeInfo = function(result) {
+		var headers = {};
+		var pairs = result.split("\r\n");	
+		var pair;
+
+		for (pair in pairs) {
+			var temp = pairs[pair].split(":");
+			if (temp)
+				headers[temp[0]] = temp[1];
+		}
+
+		return headers;
+	};
+
+	var send = function(headers, userName, password) {
+		var ws = $websocket("ws://" + headers["Hosts"] + ":" + headers["Port"]);
+
+		ws.onOpen(function() {
+			ws.send("SET-CREDENTIAL MIQI/1.0\r\n"
+				+ "ClientId:" + headers["ClientId"] + "\r\n"
+				+ "UserName:" + userName + "\r\n"
+				+ "Password:" + password + "\r\n");
+			ws.close();
+		});
+	};
+	
+	return {
+		trans: function(userName, password) {
+		  document.addEventListener("deviceready", function () {
+
+			alert(userName + " " + password);
+			$cordovaBarcodeScanner
+			  .scan()
+			  .then(function(result) {
+				if (!result.cancelled) {
+					alert(result.text);
+					send(parseBarcodeInfo(result.text), userName, password);
+				}
+			  }, function(error) {
+				alert("error!");
+			  });
+
+		  }, false);			
+		},
 	};
 });

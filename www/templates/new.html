@@ -1,0 +1,23 @@
+<ion-view view-title="New Credential">
+  <ion-content>
+    <form ng-submit="doSave()">
+      <div class="list">
+        <p class="input-label">Description</p>
+        <label class="item item-input">
+          <input type="text" ng-model="credential.name">
+        </label>
+        <p class="input-label">User Name</p>
+        <label class="item item-input">
+          <input type="text" ng-model="credential.userName">
+        </label>
+        <p class="input-label">Password</p>
+        <label class="item item-input">
+          <input type="text" ng-model="credential.password">
+        </label>
+        <label class="item">
+          <button class="button button-block button-positive" type="submit">Save</button>
+        </label>
+      </div>
+    </form>	
+  </ion-content>
+</ion-view>
