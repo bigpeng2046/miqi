@@ -45,4 +45,29 @@ angular.module('miqi.services', [])
       return null;
     }
   };
+})
+
+.factory('PhraseDAO', function($cordovaSQLite) {
+	return {
+		addPhrase: function(phrase) {
+			var query = "INSERT INTO sqltable (name) VALUES (?)";
+			return $cordovaSQLite.execute(sqlDB, query, [phrase]);
+		},
+
+		removePhrase: function(id) {
+		    var query = "DELETE FROM sqltable WHERE id = ?";
+			$cordovaSQLite.execute(sqlDB, query, [id]);
+		},
+
+		transPhrase: function(id) {
+		    var query = "SELECT id, name FROM sqltable WHERE id = ?";
+			$cordovaSQLite.execute(sqlDB, query, [id]);
+		},
+
+		retrievePhrases: function() {
+			var query = "SELECT id, name FROM sqltable";
+			return $cordovaSQLite.execute(sqlDB, query);
+		},
+		
+	};
 });

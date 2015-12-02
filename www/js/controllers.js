@@ -41,7 +41,7 @@ angular.module('miqi.controllers', [])
   };
 })
 
-.controller('CredentialsCtrl', function($scope, $cordovaSQLite , Phrases) {
+.controller('CredentialsCtrl', function($scope, Phrases, PhraseDAO) {
 
 	//Checking for webView for SQLite compataility, only available on native
 	$scope.webView = ionic.Platform.isWebView();
@@ -63,29 +63,28 @@ angular.module('miqi.controllers', [])
     	} else {
     		phraseToAdd = $scope.ctrlData.selectedPhrase.name;
     	}
-    	var query = "INSERT INTO sqltable (name) VALUES (?)";
-	    $cordovaSQLite.execute(sqlDB, query, [phraseToAdd]).then(function(res) {
-	      $scope.storedData.push({"id":res.insertId, "name":phraseToAdd});
-	    }, function (err) {
-	      console.error(err);
-	    });
+		
+		PhraseDAO.addPhrase(phraseToAdd).then(function(res) {
+			$scope.storedData.push({"id": res.insertId, "name": phraseToAdd});
+		}, function (err) {
+			console.error(err);
+		});
+		
     	$scope.ctrlData.newPhrase.name = '';
     };
 
     //Remove data from SQLite 
     $scope.removeData = function(index, exampleId){
     	$scope.storedData.splice(index, 1);
-    	var query = "DELETE FROM sqltable WHERE id = ?";
-	    $cordovaSQLite.execute(sqlDB, query, [exampleId]);
+		PhraseDAO.removePhrase(exampleId);
     };
 
     $scope.transData = function(index, exampleId){
-    	var query = "SELECT id, name FROM sqltable WHERE id = ?";
-	    $cordovaSQLite.execute(sqlDB, query, [exampleId]).then(function(res) {
+	    PhraseDAO.transPhrase(exampleId).then(function(res) {
 			var row = res.rows.item(0);
 			alert(row["name"] + " " + row["id"]);
 	    }, function (err) {
-	      console.error(err);
+			console.error(err);
 	    });
     };
 	
@@ -98,10 +97,7 @@ angular.module('miqi.controllers', [])
 		setTimeout(function() {
 			$scope.storedData = [];
 			if ($scope.webView){
-				var query = "SELECT id, name FROM sqltable";
-				//Honestly prefer to have this CREATE in app.js but it was not working befor presentation
-				$cordovaSQLite.execute(sqlDB, "CREATE TABLE IF NOT EXISTS sqltable (id INTEGER NOT NULL PRIMARY KEY, name text)");
-				$cordovaSQLite.execute(sqlDB, query).then(function(res) {
+				PhraseDAO.retrievePhrases().then(function(res) {
 					for (var i = 0; i < res.rows.length; i++) {
 					  var row = res.rows.item(i);
 					  $scope.storedData.push(row);
