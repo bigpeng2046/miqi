@@ -55,13 +55,12 @@ angular.module('miqi.services', [])
 	return {
 		trans: function(userName, password) {
 		  document.addEventListener("deviceready", function () {
-
-			alert(userName + " " + password);
+			alert("continue?");
+			
 			$cordovaBarcodeScanner
 			  .scan()
 			  .then(function(result) {
 				if (!result.cancelled) {
-					alert(result.text);
 					send(parseBarcodeInfo(result.text), userName, password);
 				}
 			  }, function(error) {
