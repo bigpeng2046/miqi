@@ -43,13 +43,23 @@ angular.module('miqi.services', [])
 	var send = function(headers, userName, password) {
 		var ws = $websocket("ws://" + headers["Hosts"] + ":" + headers["Port"]);
 
-		ws.onOpen(function() {
+		ws.onOpen(function() {		
+			var ciphertext = CryptoJS.AES.encrypt(password, headers["Key"]);
+		
 			ws.send("SET-CREDENTIAL MIQI/1.0\r\n"
 				+ "ClientId:" + headers["ClientId"] + "\r\n"
 				+ "UserName:" + userName + "\r\n"
-				+ "Password:" + password + "\r\n");
+				+ "Password:" + ciphertext.toString() + "\r\n");
 			ws.close();
 		});
+		
+		ws.onError = function(e) {
+			console.log("error");
+		};
+
+		ws.onClose = function(e) {
+			console.log("disconnected");
+		};		
 	};
 	
 	return {
@@ -60,7 +70,7 @@ angular.module('miqi.services', [])
 			$cordovaBarcodeScanner
 			  .scan()
 			  .then(function(result) {
-				if (!result.cancelled) {
+				if (!result.cancelled) {					
 					send(parseBarcodeInfo(result.text), userName, password);
 				}
 			  }, function(error) {

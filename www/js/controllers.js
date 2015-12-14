@@ -56,7 +56,7 @@ angular.module('miqi.controllers', [])
     $scope.transData = function(index, exampleId){
 	    CredentialDAO.trans(exampleId).then(function(res) {
 			var row = res.rows.item(0);
-			// alert(row["name"] + " " + row["id"]);
+			
 			Transmition.trans(row['user_name'], row['password']);
 	    }, function (err) {
 			console.error(err);
