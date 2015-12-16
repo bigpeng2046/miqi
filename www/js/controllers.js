@@ -1,6 +1,6 @@
 angular.module('miqi.controllers', [])
 
-.controller('AppCtrl', function($scope, $ionicModal, $timeout) {
+.controller('LoginCtrl', function($rootScope, $scope, $state, $ionicModal, $timeout) {
 
   // With the new view caching in Ionic, Controllers are only called
   // when they are recreated or on app start, instead of every page change.
@@ -31,6 +31,8 @@ angular.module('miqi.controllers', [])
 
   // Perform the login action when the user submits the login form
   $scope.doLogin = function() {
+	$rootScope.isAuthenticated = true;
+	$state.go('tab.credentials');
     console.log('Doing login', $scope.loginData);
 
     // Simulate a login delay. Remove this and replace with your login
@@ -101,5 +103,9 @@ angular.module('miqi.controllers', [])
 			console.error(err);
 		});
 	};
+	
+})
+
+.controller('SettingsCtrl', function($scope, $state) {
 	
 });

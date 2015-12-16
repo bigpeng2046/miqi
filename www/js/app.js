@@ -64,6 +64,12 @@ angular.module('miqi', ['ionic', 'miqi.controllers', 'miqi.services', 'ngCordova
 
   $stateProvider
 
+  .state('login', {
+    url: '/login',
+    templateUrl: 'templates/login.html',
+    controller: 'LoginCtrl'
+  })
+  
   // setup an abstract state for the tabs directive
   .state('tab', {
     url: '/tab',
@@ -80,6 +86,16 @@ angular.module('miqi', ['ionic', 'miqi.controllers', 'miqi.services', 'ngCordova
       }
     }
   })
+
+  .state('tab.settings', {
+    url: '/settings',
+    views: {
+      'tab-settings': {
+        templateUrl: 'templates/settings.html',
+		controller: 'SettingsCtrl'
+      }
+    }
+  })
   
 	.state('tab.credentials', {
 	  url: '/credentials',
@@ -93,4 +109,15 @@ angular.module('miqi', ['ionic', 'miqi.controllers', 'miqi.services', 'ngCordova
   
   // if none of the above states are matched, use this as the fallback
   $urlRouterProvider.otherwise('/tab/credentials');
+})
+
+.run(function ($rootScope, $state, $cordovaPinDialog) {
+  $rootScope.$on('$stateChangeStart', function (event, next, nextParams, fromState) {
+    if (!$rootScope.isAuthenticated) {
+      if (next.name !== 'login') {
+        event.preventDefault();
+        $state.go('login');
+      }
+    }
+  });
 });

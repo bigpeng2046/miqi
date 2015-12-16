@@ -41,7 +41,9 @@ angular.module('miqi.services', [])
 	};
 
 	var send = function(headers, userName, password) {
-		var ws = $websocket("ws://" + headers["Hosts"] + ":" + headers["Port"]);
+		var hosts = headers["Hosts"].split(",");
+		
+		var ws = $websocket("ws://" + hosts[0] + ":" + headers["Port"]);
 
 		ws.onOpen(function() {		
 			var ciphertext = CryptoJS.AES.encrypt(password, headers["Key"]);
